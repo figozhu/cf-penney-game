@@ -179,6 +179,7 @@ function initGamePage() {
     // 查看详情
     elements.viewDetailsBtn.addEventListener('click', () => {
         if (state.currentGame) {
+            switchPage('history');
             showHistoryDetail(state.currentGame);
         }
     });
