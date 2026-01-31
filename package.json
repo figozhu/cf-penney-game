@@ -1,0 +1,16 @@
+{
+  "name": "penney-game",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Penney's Game - 可验证公平性的硬币序列游戏",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  },
+  "dependencies": {
+    "@cloudflare/kv-asset-handler": "^0.3.0"
+  }
+}

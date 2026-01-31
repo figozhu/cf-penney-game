@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Penney's Game - 一个可验证公平性的硬币序列游戏">
+  <title>Penney's Game - 硬币序列游戏</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="app">
+    <!-- 导航栏 -->
+    <nav class="nav-bar">
+      <div class="nav-container">
+        <h1 class="nav-title">Penney's Game</h1>
+        <div class="nav-tabs">
+          <button class="nav-tab active" data-tab="game">游戏</button>
+          <button class="nav-tab" data-tab="verify">验证</button>
+          <button class="nav-tab" data-tab="history">历史</button>
+        </div>
+        <button class="nav-help" id="helpBtn" title="游戏规则">?</button>
+      </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+      <!-- 游戏页面 -->
+      <section id="gamePage" class="page active">
+        <!-- 游戏设置区 -->
+        <div class="game-setup" id="gameSetup">
+          <div class="setup-card">
+            <h2 class="setup-title">选择你的序列</h2>
+            
+            <div class="sequence-grid" id="sequenceGrid">
+              <!-- 8个序列选项 -->
+            </div>
+
+            <div class="setup-options">
+              <div class="option-group">
+                <label>投掷次数</label>
+                <select id="flipCount" class="select-input">
+                  <option value="1000">1,000 次</option>
+                  <option value="5000" selected>5,000 次</option>
+                  <option value="10000">10,000 次</option>
+                </select>
+              </div>
+
+              <div class="option-group">
+                <label>随机种子</label>
+                <div class="seed-display">
+                  <code id="currentSeed" class="seed-code">--------</code>
+                  <button id="refreshSeed" class="btn-icon" title="刷新种子">🔄</button>
+                  <button id="verifySeed" class="btn-icon" title="验证种子">🔍</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 程序序列显示区 -->
+          <div class="program-sequence" id="programSequence" style="display: none;">
+            <div class="vs-container">
+              <div class="player-side">
+                <span class="side-label player">你的选择</span>
+                <div class="sequence-display" id="playerSequenceDisplay"></div>
+              </div>
+              <span class="vs-text">VS</span>
+              <div class="program-side">
+                <span class="side-label program">AI 选择</span>
+                <div class="sequence-display" id="programSequenceDisplay"></div>
+              </div>
+            </div>
+            <button id="startGameBtn" class="btn-primary btn-large">开始游戏</button>
+          </div>
+        </div>
+
+        <!-- 游戏进行区 -->
+        <div class="game-play" id="gamePlay" style="display: none;">
+          <!-- 计分板 -->
+          <div class="scoreboard">
+            <div class="score-item player">
+              <span class="score-label">你</span>
+              <span class="score-value" id="playerScore">0</span>
+              <div class="score-sequence" id="playerScoreSeq"></div>
+            </div>
+            <div class="score-divider">
+              <span class="progress-text" id="progressText">0 / 5000</span>
+            </div>
+            <div class="score-item program">
+              <span class="score-label">AI</span>
+              <span class="score-value" id="programScore">0</span>
+              <div class="score-sequence" id="programScoreSeq"></div>
+            </div>
+          </div>
+
+          <!-- 硬币动画区 -->
+          <div class="coin-track-container">
+            <div class="coin-track" id="coinTrack">
+              <!-- 硬币会动态添加到这里 -->
+            </div>
+          </div>
+
+          <!-- 控制栏 -->
+          <div class="control-bar">
+            <div class="speed-controls">
+              <span class="control-label">速度：</span>
+              <button class="speed-btn active" data-speed="1">1x</button>
+              <button class="speed-btn" data-speed="2">2x</button>
+              <button class="speed-btn" data-speed="3">3x</button>
+            </div>
+            <button id="skipBtn" class="btn-secondary">跳过动画</button>
+          </div>
+        </div>
+
+        <!-- 结果区 -->
+        <div class="game-result" id="gameResult" style="display: none;">
+          <div class="result-card">
+            <h2 class="result-title">游戏结束</h2>
+            <div class="result-scores">
+              <div class="result-score player">
+                <span class="result-label">你</span>
+                <span class="result-value" id="finalPlayerScore">0</span>
+                <span class="result-unit">胜</span>
+              </div>
+              <span class="result-vs">:</span>
+              <div class="result-score program">
+                <span class="result-label">AI</span>
+                <span class="result-value" id="finalProgramScore">0</span>
+                <span class="result-unit">胜</span>
+              </div>
+            </div>
+            <div class="result-actions">
+              <button id="playAgainBtn" class="btn-primary btn-large">再来一局</button>
+              <button id="viewDetailsBtn" class="btn-secondary">查看详情</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 验证页面 -->
+      <section id="verifyPage" class="page">
+        <div class="verify-container">
+          <div class="verify-header">
+            <h2>种子验证</h2>
+            <p class="verify-desc">输入种子查看对应的硬币序列</p>
+          </div>
+
+          <div class="verify-input-group">
+            <input type="text" id="verifySeedInput" class="verify-input" 
+                   placeholder="输入8位十六进制种子" maxlength="8">
+            <span class="verify-status" id="verifyStatus"></span>
+          </div>
+
+          <div class="verify-options">
+            <div class="option-group">
+              <label>序列长度</label>
+              <select id="verifyCount" class="select-input">
+                <option value="1000">1,000</option>
+                <option value="5000" selected>5,000</option>
+                <option value="10000">10,000</option>
+              </select>
+            </div>
+            <button id="generateSequenceBtn" class="btn-primary">生成序列</button>
+          </div>
+
+          <!-- 搜索功能 -->
+          <div class="search-group" id="searchGroup" style="display: none;">
+            <input type="text" id="searchPattern" class="search-input" 
+                   placeholder="搜索序列（如：正反正）" maxlength="10">
+            <button id="searchBtn" class="btn-secondary">搜索</button>
+            <span class="search-result" id="searchResult"></span>
+          </div>
+
+          <!-- 序列显示区（虚拟滚动） -->
+          <div class="sequence-viewer" id="sequenceViewer" style="display: none;">
+            <div class="sequence-scroll" id="sequenceScroll">
+              <div class="sequence-content" id="sequenceContent">
+                <!-- 虚拟滚动内容 -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 历史记录页面 -->
+      <section id="historyPage" class="page">
+        <div class="history-container">
+          <div class="history-header">
+            <h2>历史记录</h2>
+            <button id="clearHistoryBtn" class="btn-text">清空记录</button>
+          </div>
+
+          <div class="history-list" id="historyList">
+            <!-- 历史记录项 -->
+          </div>
+
+          <div class="history-empty" id="historyEmpty">
+            <p>暂无游戏记录</p>
+          </div>
+        </div>
+
+        <!-- 历史详情弹窗 -->
+        <div class="modal" id="historyDetailModal">
+          <div class="modal-content modal-large">
+            <div class="modal-header">
+              <h3>游戏详情</h3>
+              <button class="modal-close" data-close>&times;</button>
+            </div>
+            <div class="modal-body" id="historyDetailBody">
+              <!-- 详情内容 -->
+            </div>
+            <div class="modal-footer">
+              <button id="goToVerifyBtn" class="btn-secondary">查看种子</button>
+              <button class="btn-primary" data-close>关闭</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- 游戏规则弹窗 -->
+    <div class="modal" id="rulesModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>游戏规则</h3>
+          <button class="modal-close" data-close>&times;</button>
+        </div>
+        <div class="modal-body">
+          <h4>Penney's Game 简介</h4>
+          <p>Penney's Game 是一个经典的概率博弈游戏，由数学家 Walter Penney 于1969年提出。</p>
+          
+          <h4>游戏玩法</h4>
+          <ol>
+            <li>你选择一个由3个硬币正反面组成的序列（如"正正反"）</li>
+            <li>AI 根据策略选择对应的序列</li>
+            <li>系统连续投掷硬币，谁的序列先出现谁就赢得这一轮</li>
+            <li>从获胜序列后继续比赛，直到投掷次数用尽</li>
+            <li>最终比较双方获胜的轮数</li>
+          </ol>
+          
+          <h4>公平性验证</h4>
+          <p>本游戏采用可验证的随机数系统：</p>
+          <ul>
+            <li>游戏开始前公开随机数种子</li>
+            <li>你可以随时查看该种子生成的完整硬币序列</li>
+            <li>相同的种子必定产生相同的序列</li>
+          </ul>
+          
+          <div class="rules-tip">
+            <strong>小贴士：</strong>这个游戏有个有趣的特点——无论你选择什么序列，AI 总能找到一个更占优势的序列！
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-primary" data-close>开始游戏</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
